@@ -1,13 +1,32 @@
 from bs4 import BeautifulSoup
+from collections import defaultdict
 import requests
+
+agent = {"User-Agent":'Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.115 Safari/537.36'}
+
 links = []
+docs = []
+inv_indx = defaultdict(set)
+
+def save_link_as_html(link, count):
+
+    print("Save link as html")
+    code = requests.get(link)
+    plain = code.text
+    s = BeautifulSoup(plain, "html.parser")
+    des = str(' '.join((str(s.find('div', {'id': 'feature-bullets'}).text)).replace('\n', ' ').replace('\t', ' ').replace('-',' ').replace( ':', ' ').replace('|', ' ').replace(',', ' ').split()))
+    docs.append(des)
+
+
+
 
 def parserToCSV(fileName,output):
     file = open(fileName,'r')
     filesCSV = open(output,'w')
     filesCSV.write('Company, CPU company, CPU model, touchscreen, Link\n')
-
+    count = 0
     for info in file:
+        ###to function ###
         companies = ["HP", "Dell", "Lenovo","ACER","Acer Consumer","Alienware","Alphacool","Aorus","Apple","Aspire","Asus","Azom","CIRCLE","Compaq","Computer Upgrade King","CyberpowerPC","Dell","ELECTROPRIME","Ematic","Fujitsu","Generic","Getac","Gigabyte","Google","HardDriveGeeks","HITSAN INCORPORATION","HP","Huawei","Hyundai","iBall","IBM","iBUYPOWER","Intel","Jumper","Koolance","Lava","Lenovo","LEPAKSHI)","LG","Micromax","Mi" ,"crosoft","MITXPC","MSI","Qotom","Razer","RCA","RDP","Reach","Samsung","SAMSUNG","Shop The World","Stillersafe","Torque Traders"]
         cpuModels = ["i3", "i5", "i7","i9","Pentium","Celeron", "Atom","A4","A8","Athlon", "A10", "A6"]
         isTouchscreen = "No"
@@ -33,6 +52,26 @@ def parserToCSV(fileName,output):
         filesCSV.write(isTouchscreen + ',')
         link = file.readline()
         filesCSV.write(link)
+        ###to function ###
+        save_link_as_html(link, count)
+        for word in docs[count].split():
+            inv_indx[word].add(count)
+        count = count + 1
+        if(count == 2):
+            break
+
+    indexCsv = open('index.csv', 'w')
+    for key in inv_indx.keys():
+        toCsv = str(inv_indx[key])
+        toCsv.replace(',',' ')
+        toCsv.replace('{', '')
+        toCsv.replace('}', '')
+        indexCsv.write(key + ',' + str(inv_indx[key]) + '\n')
+    print(" ")
+    indexCsv.close()
+
+
+
     file.close()
     filesCSV.close()
 
@@ -47,7 +86,7 @@ def filter(webUrl):
     for link in s.findAll('a', {'class':'s-access-detail-page'}):
         info = link.get('title')
         link = link.get('href')
-        links
+        links.append(link)
         info = info.lower()
         if words[0] in info:
             files[0].write(info + '\n')
@@ -62,36 +101,11 @@ def filter(webUrl):
     files[1].close()
     files[2].close()
 
-for i in range(0,250):
+
+
+
+for i in range(0,1):
     #filter("https://www.amazon.in/s/ref=lp_1375424031_pg_2?rh=n%3A976392031%2Cn%3A%21976393031%2Cn%3A1375424031&page=" + str(i) + "&ie=UTF8&qid=1546012663")
     parserToCSV("results_black.txt","results_black.csv")
-    parserToCSV("results_office.txt","results_office.csv")
-    parserToCSV("results_inspiron.txt","results_inspiron.csv")
-
-
-def save_all_links_as_html(from_page, to_page, results_per_page):
-
-    print("Saving all links as html files...")
-
-    count = 0
-
-    for i in range(from_page, to_page + 1):
-        source = requests.get("http://www.dx.com/s/security+camera?cateId=0&cateName=All%20Categories&PageIndex=" + str(i) + "#sortBar", headers=agent).text
-        soup = BeautifulSoup(source)
-
-        links = []
-
-        for k in range(0, results_per_page):
-            results = soup.findAll("a", {"id": "content_ProductList1_rpProducts_lnkShortHeadLine1_"+str(k)})
-            links.append(results[0]["href"])
-
-            source2 = requests.get(links[k], headers=agent).text
-            soup2 = BeautifulSoup(source2)
-
-            with open("dxHTML/" + str(count) + ".html", "w") as file:
-                file.write(str(soup2))
-
-            print(count)
-
-
-            count = count + 1
+    #parserToCSV("results_office.txt","results_office.csv")
+    #parserToCSV("results_inspiron.txt","results_inspiron.csv")
