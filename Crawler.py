@@ -11,17 +11,17 @@ docs = []
 inv_indx = defaultdict(set)
 
 def save_link_as_doc(link, count):
-    if count > 2: return
+    if count > 20: return
     print("Save link as html")
     code = requests.get(link)
     plain = code.text
-    time.sleep(6)
+    time.sleep(240)
     s = BeautifulSoup(plain, "html.parser")
     des = str(' '.join((str(s.find('div', {'id': 'feature-bullets'}).text)).replace('\n', ' ').replace('\t', ' ').replace('-',' ').replace( ':', ' ').replace('|', ' ').replace(',', ' ').split()))
     docs.append(des)
 
 def  calc_inv_indx(count):
-    if count > 2: return
+    if count > 20: return
     for word in docs[count].split():
         inv_indx[word].add(count)
     count = count + 1
@@ -33,7 +33,7 @@ def create_inv_indx():
         toCsv = toCsv.replace(',', '->')
         toCsv = toCsv.replace('{', '')
         toCsv = toCsv.replace('}', '')
-        indexCsv.write(key + ',' + toCsv + '\n')
+        indexCsv.write(key + ',' + toCsv + ',' + str(len(inv_indx[key]))+ '\n')
     print(" ")
     indexCsv.close()
 
