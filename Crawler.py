@@ -1,3 +1,5 @@
+import time
+
 from bs4 import BeautifulSoup
 from collections import defaultdict
 import requests
@@ -8,16 +10,32 @@ links = []
 docs = []
 inv_indx = defaultdict(set)
 
-def save_link_as_html(link, count):
-
+def save_link_as_doc(link, count):
+    if count > 2: return
     print("Save link as html")
     code = requests.get(link)
     plain = code.text
+    time.sleep(6)
     s = BeautifulSoup(plain, "html.parser")
     des = str(' '.join((str(s.find('div', {'id': 'feature-bullets'}).text)).replace('\n', ' ').replace('\t', ' ').replace('-',' ').replace( ':', ' ').replace('|', ' ').replace(',', ' ').split()))
     docs.append(des)
 
+def  calc_inv_indx(count):
+    if count > 2: return
+    for word in docs[count].split():
+        inv_indx[word].add(count)
+    count = count + 1
 
+def create_inv_indx():
+    indexCsv = open('index.csv', 'w')
+    for key in inv_indx.keys():
+        toCsv = str(inv_indx[key])
+        toCsv = toCsv.replace(',', '->')
+        toCsv = toCsv.replace('{', '')
+        toCsv = toCsv.replace('}', '')
+        indexCsv.write(key + ',' + toCsv + '\n')
+    print(" ")
+    indexCsv.close()
 
 
 def parserToCSV(fileName,output):
@@ -52,26 +70,10 @@ def parserToCSV(fileName,output):
         filesCSV.write(isTouchscreen + ',')
         link = file.readline()
         filesCSV.write(link)
-        ###to function ###
-        save_link_as_html(link, count)
-        for word in docs[count].split():
-            inv_indx[word].add(count)
-        count = count + 1
-        if(count == 2):
-            break
-
-    indexCsv = open('index.csv', 'w')
-    for key in inv_indx.keys():
-        toCsv = str(inv_indx[key])
-        toCsv.replace(',',' ')
-        toCsv.replace('{', '')
-        toCsv.replace('}', '')
-        indexCsv.write(key + ',' + str(inv_indx[key]) + '\n')
-    print(" ")
-    indexCsv.close()
-
-
-
+        save_link_as_doc(link, count)
+        calc_inv_indx(count)
+        count += 1
+    create_inv_indx()
     file.close()
     filesCSV.close()
 
@@ -103,9 +105,9 @@ def filter(webUrl):
 
 
 
-
 for i in range(0,1):
     #filter("https://www.amazon.in/s/ref=lp_1375424031_pg_2?rh=n%3A976392031%2Cn%3A%21976393031%2Cn%3A1375424031&page=" + str(i) + "&ie=UTF8&qid=1546012663")
     parserToCSV("results_black.txt","results_black.csv")
     #parserToCSV("results_office.txt","results_office.csv")
     #parserToCSV("results_inspiron.txt","results_inspiron.csv")
+
