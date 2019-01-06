@@ -10,15 +10,18 @@ links = []
 docs = []
 inv_indx = defaultdict(set)
 
+
 def save_link_as_doc(link, count):
     if count > 20: return
-    print("Save link as html")
+    print("Page number " + str(count) + " was saved")
     code = requests.get(link)
     plain = code.text
-    time.sleep(240)
+    time.sleep(360)
     s = BeautifulSoup(plain, "html.parser")
-    des = str(' '.join((str(s.find('div', {'id': 'feature-bullets'}).text)).replace('\n', ' ').replace('\t', ' ').replace('-',' ').replace( ':', ' ').replace('|', ' ').replace(',', ' ').split()))
-    docs.append(des)
+    if(s is not None):
+        doc = str(' '.join((str(s.find('div', {'id': 'feature-bullets'}).text)).replace('\n', ' ').replace('\t', ' ').replace('-',' ').replace( ':', ' ').replace('|', ' ').replace(',', ' ').split()))
+        doc = doc.lower()
+        docs.append(doc)
 
 def  calc_inv_indx(count):
     if count > 20: return
@@ -27,7 +30,7 @@ def  calc_inv_indx(count):
     count = count + 1
 
 def create_inv_indx():
-    indexCsv = open('index.csv', 'w')
+    indexCsv = open('index_inspiron.csv', 'w')
     for key in inv_indx.keys():
         toCsv = str(inv_indx[key])
         toCsv = toCsv.replace(',', '->')
@@ -107,7 +110,7 @@ def filter(webUrl):
 
 for i in range(0,1):
     #filter("https://www.amazon.in/s/ref=lp_1375424031_pg_2?rh=n%3A976392031%2Cn%3A%21976393031%2Cn%3A1375424031&page=" + str(i) + "&ie=UTF8&qid=1546012663")
-    parserToCSV("results_black.txt","results_black.csv")
+    #parserToCSV("results_black.txt","results_black.csv")
     #parserToCSV("results_office.txt","results_office.csv")
-    #parserToCSV("results_inspiron.txt","results_inspiron.csv")
+    parserToCSV("results_inspiron.txt","results_inspiron.csv")
 
